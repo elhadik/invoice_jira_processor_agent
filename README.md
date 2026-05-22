@@ -112,3 +112,61 @@ export GOOGLE_CLOUD_LOCATION=us-central1
 ```
 
 Once launched, navigate to **`http://127.0.0.1:8000`**, select **`ge_fileagent`**, upload a receipt, and run your audit prompt!
+
+---
+
+## ☁️ Cloud Deployment & Gemini Enterprise Registration
+
+Follow this operational manual to host your JIRA-integrated flat agent in the cloud and connect it natively to your Gemini Enterprise application:
+
+### Step 1: Deploy to Vertex AI Agent Engine (Reasoning Engine)
+Run the deploy command from the parent directory `/usr/local/google/home/elhadik/` to bundle your flat ge_fileagent package:
+```bash
+export GOOGLE_API_USE_CLIENT_CERTIFICATE=false
+/usr/local/google/home/elhadik/gamestop_invoice/venv/bin/adk deploy agent_engine ge_fileagent --project shade-sandbox --region us-central1 --display_name GeFileAgent --description "Plain ADK expert multi-agent retail invoice auditor with JIRA integration." --requirements_file ge_fileagent/requirements.txt
+```
+Wait for the provisioning to complete. Copy the returned **Reasoning Engine Resource ID** (for example: `projects/943928157761/locations/us-central1/reasoningEngines/8673214351466823680`).
+
+### Step 2: Register as a Custom Agent in Gemini Enterprise
+1.  Open the **Google Cloud Console** and navigate to **Discovery Engine -> Agent Search**.
+2.  Select your active Enterprise App ID: **`gemini-enterprise-1771779446347`** (Resource ID: `gemini-enterprise-17717794_1771779446347`).
+3.  Click **Add Agent / Register Agent**.
+4.  Choose **Custom Agent** (which communicates natively with plain ADK Reasoning Engine endpoints).
+5.  Under the **Agent Card JSON** configuration, paste this exact specification:
+
+```json
+{
+  "protocolVersion": "0.3.0",
+  "name": "ge_fileagent",
+  "description": "Expert multi-agent retail store auditor.",
+  "url": "https://us-central1-aiplatform.googleapis.com/v1beta1/projects/943928157761/locations/us-central1/reasoningEngines/<YOUR_DEPLOYED_ENGINE_ID>",
+  "version": "1.0.0",
+  "defaultInputModes": ["text/plain"],
+  "defaultOutputModes": ["text/plain"],
+  "preferredTransport": "HTTP+JSON",
+  "capabilities": {
+    "streaming": false,
+    "extensions": []
+  },
+  "skills": [
+    {
+      "id": "ge_fileagent",
+      "name": "Multi-Agent Store Invoice Auditor",
+      "description": "Extracts retail entities, performs image-to-text validation, routes processed documents to GCS, and dynamically raises JIRA support tickets for discrepancies.",
+      "tags": ["invoice", "audit", "jira", "gcs"],
+      "examples": [
+        "Analyze this uploaded invoice",
+        "Run store audit pipeline"
+      ]
+    }
+  ]
+}
+```
+*(Replace `<YOUR_DEPLOYED_ENGINE_ID>` with the actual Reasoning Engine ID copied in Step 1!)*
+
+### Step 3: Test inside your Gemini Enterprise Chat
+1.  Go to your Gemini Enterprise chat assistant console interface.
+2.  Attach/Upload your invoice or receipt image or PDF.
+3.  Type **`Analyze this invoice`** or **`Run audit`**.
+4.  The cloud Reasoning Engine will dynamically download the file in-memory directly from GCS, coordinate the specialists, route archives, raise a JIRA ticket if discrepancies exist, and present the detailed markdown report directly in your chat!
+

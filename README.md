@@ -1,6 +1,19 @@
 # Multi-Agent Retail Invoice Auditor (Plain ADK)
 
-This folder contains a flat, pure **Google Agent Development Kit (ADK)** agent workspace that implements a sequential multi-agent pipeline to automatically extract retail invoice details, audit them against original document images, score validation confidence, archive assets, and dynamically raise support tickets in Atlassian JIRA for failed validation checks.
+This folder contains a flat, pure **Google Agent Development Kit (ADK)** agent workspace that implements a sequential multi-agent pipeline designed to automate retail store invoice auditing, data validation, cloud archival routing, and automated helpdesk ticket resolution.
+
+---
+
+## 🎯 Core Capabilities
+
+The system provides an automated, end-to-end store invoice auditing pipeline with the following capabilities:
+
+*   **Automated Data Extraction**: Employs advanced parsing models to analyze variable-format store receipts and invoices, cleanly extracting key store taxonomies (Merchant name, address, phone), transaction headers (Date, Time, Cashier ID), financial summaries (Subtotal, Tax, Total, Payment Method), and granular line-item details.
+*   **Dual-Model Visual Audit Validation**: Combines the structured output of Google Cloud Document AI with the visual spatial reasoning of **Gemini 2.5 Flash**. It performs a line-by-line, visually grounded comparison to check for discrepancies between the extracted data and the original document image, scoring confidence on a 1–3 scale.
+*   **GCS Cloud Archival & Routing**: Automatically evaluates audit confidence.
+    *   **Score 3 (Perfect Match)**: Archives the document directly in the GCS Processed bucket.
+    *   **Score < 3 (Discrepancy/Anomaly)**: Routes the document to the GCS Human Review bucket for manual intervention.
+*   **Dynamic JIRA Ticketing Sub-Agent**: When a discrepancy is flagged (Score < 3), the router delegates to a specialized JIRA MCP sub-agent to automatically log a support ticket with a structured finding report (including discrepancy summaries and GCS review links) on your Atlassian Cloud support board.
 
 ---
 

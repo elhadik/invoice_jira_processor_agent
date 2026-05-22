@@ -84,6 +84,49 @@ Connects to a remotely hosted Atlassian MCP server using Server-Sent Events (SSE
 
 ---
 
+## ⚙️ Local .env Configuration
+
+To run the auditor locally, create a `.env` file inside `/usr/local/google/home/elhadik/ge_fileagent/` and configure these variables:
+
+```env
+# 1. Bypass setting for corporate OpenSSL mTLS checks (Mandatory!)
+GOOGLE_API_USE_CLIENT_CERTIFICATE=false
+
+# 2. Vertex AI Cloud settings
+GOOGLE_GENAI_USE_VERTEXAI=true
+GOOGLE_CLOUD_PROJECT=shade-sandbox
+GOOGLE_CLOUD_LOCATION=us-central1
+GEMINI_MODEL_NAME=gemini-2.5-flash
+
+# 3. Google Cloud Storage (GCS) Archival Buckets
+NESS_PROCESSED_DOCS_BUCKET=gamestop-processed-docs-shade-sandbox
+NESS_HUMAN_REVIEW_BUCKET=gamestop-review-docs-shade-sandbox
+
+# 4. JIRA Integration credentials
+JIRA_EMAIL=elhadik@google.com
+JIRA_API_TOKEN=<YOUR_ATLASSIAN_PAT_TOKEN>
+```
+
+---
+
+## ☁️ Google Cloud Authentication
+
+Before running the local server, your terminal session must be authenticated with Google Cloud to access Vertex AI and GCS bucket resources:
+
+```bash
+# 1. Authenticate with your Google Cloud user account
+gcloud auth login
+
+# 2. Authenticate Application Default Credentials (ADC)
+# (This is mandatory for the python google-genai SDK to run locally!)
+gcloud auth application-default login
+
+# 3. Set your default cloud project
+gcloud config set project shade-sandbox
+```
+
+---
+
 ## 🚀 How to Run Locally
 
 First, make sure you are in this directory:

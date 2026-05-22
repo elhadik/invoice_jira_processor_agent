@@ -61,6 +61,29 @@ ge_fileagent/
 
 ---
 
+## ⚙️ JIRA MCP Configuration
+
+The JIRA sub-agent (`jira_agent`) utilizes the Model Context Protocol (MCP) to interact with the Atlassian cloud. It supports two runtime transport modes natively:
+
+### A. Local Stdio Mode (Default / Local Testing)
+Spawns a local subprocess running the Atlassian JIRA MCP server. 
+*   **Binary Path**: `/usr/local/google/home/elhadik/NESS_GEMINI/venv/bin/mcp-atlassian`
+*   **Standard Environment Variables**:
+    *   `JIRA_URL`: `https://google-team-vwhbosar.atlassian.net` (Atlassian cloud domain).
+    *   `JIRA_USERNAME`: Derived automatically from your `JIRA_EMAIL` setting.
+    *   `JIRA_API_TOKEN`: Your Atlassian Personal API Token.
+    *   `TOOLSETS`: Set to `"all"`.
+
+### B. SSE Cloud Mode (Production / Cloud Deploy)
+Connects to a remotely hosted Atlassian MCP server using Server-Sent Events (SSE).
+*   **Activation**: Set the `JIRA_MCP_URL` environment variable inside the `.env` file:
+    ```env
+    JIRA_MCP_URL=https://your-mcp-server.endpoints/sse
+    ```
+*   **Authentication**: The agent automatically extracts `JIRA_EMAIL` and `JIRA_API_TOKEN`, converts them to basic base64-encoded authorization headers, and performs secure tokenized handshake exchanges.
+
+---
+
 ## 🚀 How to Run Locally
 
 First, make sure you are in this directory:

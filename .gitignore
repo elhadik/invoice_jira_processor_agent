@@ -1,0 +1,13 @@
+# Local environmental configurations containing sensitive API tokens
+.env
+
+# Python byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local ADK runtime databases and file artifact caches
+.adk/
+uploads/
+*.log
+tmp_agents/

@@ -1,0 +1,8 @@
+google-adk
+google-genai
+mcp
+httpx-sse
+pydantic-settings
+sse-starlette
+google-cloud-storage
+Pillow

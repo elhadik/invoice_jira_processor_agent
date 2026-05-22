@@ -15,11 +15,11 @@ The system provides an automated, end-to-end store invoice auditing pipeline wit
     *   **Score < 3 (Discrepancy/Anomaly)**: Routes the document to the GCS Human Review bucket for manual intervention.
 *   **Dynamic JIRA Ticketing Sub-Agent**: When a discrepancy is flagged (Score < 3), the router delegates to a specialized JIRA MCP sub-agent to automatically log a support ticket with a structured finding report (including discrepancy summaries and GCS review links) on your Atlassian Cloud support board.
 
-## 📷 Sample Receipt Example
+## 📷 Sample Enterprise Invoice Example
 
-Below is the high-resolution, realistic store receipt asset used for testing extraction and visual audit validation inside the pipeline:
+Below is the high-resolution, premium B2B enterprise invoice asset used for testing extraction and visual audit validation inside the pipeline:
 
-![Sample Store Receipt](./sample_receipt.png)
+![Sample Enterprise Invoice](./sample_invoice.png)
 
 ---
 

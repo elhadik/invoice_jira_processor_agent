@@ -6,6 +6,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Local JIRA MCP stdio wrapper script (Excluded from Git and Cloud deployments)
+mcp-atlassian
+
 # Local ADK runtime databases and file artifact caches
 .adk/
 uploads/

@@ -67,7 +67,7 @@ The JIRA sub-agent (`jira_agent`) utilizes the Model Context Protocol (MCP) to i
 
 ### A. Local Stdio Mode (Default / Local Testing)
 Spawns a local subprocess running the Atlassian JIRA MCP server. 
-*   **Binary Path**: `/usr/local/google/home/elhadik/NESS_GEMINI/venv/bin/mcp-atlassian`
+*   **Binary Path**: `<WORKSPACE_DIR>/NESS_GEMINI/venv/bin/mcp-atlassian`
 *   **Standard Environment Variables**:
     *   `JIRA_URL`: `https://google-team-vwhbosar.atlassian.net` (Atlassian cloud domain).
     *   `JIRA_USERNAME`: Derived automatically from your `JIRA_EMAIL` setting.
@@ -86,7 +86,7 @@ Connects to a remotely hosted Atlassian MCP server using Server-Sent Events (SSE
 
 ## ⚙️ Local .env Configuration
 
-To run the auditor locally, create a `.env` file inside `/usr/local/google/home/elhadik/ge_fileagent/` and configure these variables:
+To run the auditor locally, create a `.env` file inside `ge_fileagent/` and configure these variables:
 
 ```env
 # 1. Bypass setting for corporate OpenSSL mTLS checks (Mandatory!)
@@ -94,16 +94,16 @@ GOOGLE_API_USE_CLIENT_CERTIFICATE=false
 
 # 2. Vertex AI Cloud settings
 GOOGLE_GENAI_USE_VERTEXAI=true
-GOOGLE_CLOUD_PROJECT=shade-sandbox
+GOOGLE_CLOUD_PROJECT=<GCP_PROJECT_ID>
 GOOGLE_CLOUD_LOCATION=us-central1
 GEMINI_MODEL_NAME=gemini-2.5-flash
 
 # 3. Google Cloud Storage (GCS) Archival Buckets
-NESS_PROCESSED_DOCS_BUCKET=gamestop-processed-docs-shade-sandbox
-NESS_HUMAN_REVIEW_BUCKET=gamestop-review-docs-shade-sandbox
+NESS_PROCESSED_DOCS_BUCKET=gamestop-processed-docs-<GCP_PROJECT_ID>
+NESS_HUMAN_REVIEW_BUCKET=gamestop-review-docs-<GCP_PROJECT_ID>
 
 # 4. JIRA Integration credentials
-JIRA_EMAIL=elhadik@google.com
+JIRA_EMAIL=<USER_EMAIL>
 JIRA_API_TOKEN=<YOUR_ATLASSIAN_PAT_TOKEN>
 ```
 
@@ -122,7 +122,7 @@ gcloud auth login
 gcloud auth application-default login
 
 # 3. Set your default cloud project
-gcloud config set project shade-sandbox
+gcloud config set project <GCP_PROJECT_ID>
 ```
 
 ---
@@ -131,7 +131,7 @@ gcloud config set project shade-sandbox
 
 First, make sure you are in this directory:
 ```bash
-cd /usr/local/google/home/elhadik/ge_fileagent
+cd ge_fileagent
 ```
 
 ### Step 1: Stage the isolated copy
@@ -139,8 +139,8 @@ To satisfy ADK's strict security traversal checks, create an isolated staging co
 ```bash
 rm -rf /tmp/adk_agents/ge_fileagent
 mkdir -p /tmp/adk_agents/ge_fileagent
-cp -r /usr/local/google/home/elhadik/ge_fileagent/* /tmp/adk_agents/ge_fileagent/
-cp /usr/local/google/home/elhadik/ge_fileagent/.env /tmp/adk_agents/ge_fileagent/
+cp -r ge_fileagent/* /tmp/adk_agents/ge_fileagent/
+cp ge_fileagent/.env /tmp/adk_agents/ge_fileagent/
 ```
 
 ### Step 2: Start the visual playground
@@ -148,10 +148,10 @@ Start the playground local server by running:
 ```bash
 export GOOGLE_API_USE_CLIENT_CERTIFICATE=false
 export GOOGLE_GENAI_USE_VERTEXAI=true
-export GOOGLE_CLOUD_PROJECT=shade-sandbox
+export GOOGLE_CLOUD_PROJECT=<GCP_PROJECT_ID>
 export GOOGLE_CLOUD_LOCATION=us-central1
 
-/usr/local/google/home/elhadik/gamestop_invoice/venv/bin/adk web /tmp/adk_agents
+<WORKSPACE_DIR>/gamestop_invoice/venv/bin/adk web /tmp/adk_agents
 ```
 
 Once launched, navigate to **`http://127.0.0.1:8000`**, select **`ge_fileagent`**, upload a receipt, and run your audit prompt!
@@ -163,10 +163,10 @@ Once launched, navigate to **`http://127.0.0.1:8000`**, select **`ge_fileagent`*
 Follow this operational manual to host your JIRA-integrated flat agent in the cloud and connect it natively to your Gemini Enterprise application:
 
 ### Step 1: Deploy to Vertex AI Agent Engine (Reasoning Engine)
-Run the deploy command from the parent directory `/usr/local/google/home/elhadik/` to bundle your flat ge_fileagent package:
+Run the deploy command from the parent directory to bundle your flat ge_fileagent package:
 ```bash
 export GOOGLE_API_USE_CLIENT_CERTIFICATE=false
-/usr/local/google/home/elhadik/gamestop_invoice/venv/bin/adk deploy agent_engine ge_fileagent --project shade-sandbox --region us-central1 --display_name GeFileAgent --description "Plain ADK expert multi-agent retail invoice auditor with JIRA integration." --requirements_file ge_fileagent/requirements.txt
+<WORKSPACE_DIR>/gamestop_invoice/venv/bin/adk deploy agent_engine ge_fileagent --project <GCP_PROJECT_ID> --region us-central1 --display_name GeFileAgent --description "Plain ADK expert multi-agent retail invoice auditor with JIRA integration." --requirements_file ge_fileagent/requirements.txt
 ```
 Wait for the provisioning to complete. Copy the returned **Reasoning Engine Resource ID** (for example: `projects/943928157761/locations/us-central1/reasoningEngines/8673214351466823680`).
 

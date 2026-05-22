@@ -49,6 +49,8 @@ The agent workspace defines a nested parent-child relationship tree, modeled nat
 *   **Model**: `gemini-2.5-flash`
 *   **Role**: Specialist JIRA assistant. Connects via our thread-safe async ThreadPool MCP execution bridge to raise support tickets on the Atlassian cloud board.
 *   **Tools**: `create_jira_ticket_tool` (Atlassian MCP integration)
+*   **JIRA Ticket Automation Board**: Below is the live screenshot of the Atlassian Cloud JIRA board (`gamestop_support_tickets`) displaying the support tickets (`KAN-4`, `KAN-5`, `KAN-6`) created dynamically and automatically by the sub-agent:
+    ![Atlassian JIRA Board Support Tickets](./jira_board_screenshot.png)
 
 ---
 

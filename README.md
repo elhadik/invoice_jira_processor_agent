@@ -67,7 +67,7 @@ The JIRA sub-agent (`jira_agent`) utilizes the Model Context Protocol (MCP) to i
 
 ### A. Local Stdio Mode (Default / Local Testing)
 Spawns a local subprocess running the Atlassian JIRA MCP server. 
-*   **Binary Path**: `<WORKSPACE_DIR>/NESS_GEMINI/venv/bin/mcp-atlassian`
+*   **Binary Path**: Resolved dynamically relative to this package directory: `ge_fileagent/mcp-atlassian` (completely self-contained).
 *   **Standard Environment Variables**:
     *   `JIRA_URL`: `https://google-team-vwhbosar.atlassian.net` (Atlassian cloud domain).
     *   `JIRA_USERNAME`: Derived automatically from your `JIRA_EMAIL` setting.

@@ -60,7 +60,8 @@ def create_jira_ticket_mcp(summary: str, description: str) -> str:
     # CASE B: Connect via local stdio (Default)
     else:
         from mcp.client.stdio import StdioServerParameters, stdio_client
-        binary_path = "/usr/local/google/home/elhadik/NESS_GEMINI/venv/bin/mcp-atlassian"
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        binary_path = os.path.join(current_dir, "mcp-atlassian")
         if not os.path.exists(binary_path):
             return f"Error: Local mcp-atlassian binary not found at {binary_path}."
 

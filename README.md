@@ -19,7 +19,7 @@ The system provides an automated, end-to-end store invoice auditing pipeline wit
 
 Below is the high-resolution, premium B2B enterprise invoice asset used for testing extraction and visual audit validation inside the pipeline:
 
-![Sample Enterprise Invoice](./sample_invoice.png)
+![Sample Enterprise Invoice](./assets/sample_invoice.png)
 
 ---
 
@@ -27,7 +27,7 @@ Below is the high-resolution, premium B2B enterprise invoice asset used for test
 
 The agent workspace defines a nested parent-child relationship tree, modeled natively using ADK's `sub_agents` property.
 
-![Agent Tree Architecture Diagram](./architecture_diagram.png)
+![Agent Tree Architecture Diagram](./assets/architecture_diagram.png)
 
 ### 1. `orchestrator_agent` (Root Coordinator)
 *   **Model**: `gemini-2.5-flash`
@@ -56,7 +56,7 @@ The agent workspace defines a nested parent-child relationship tree, modeled nat
 *   **Role**: Specialist JIRA assistant. Connects via our thread-safe async ThreadPool MCP execution bridge to raise support tickets on the Atlassian cloud board.
 *   **Tools**: `create_jira_ticket_tool` (Atlassian MCP integration)
 *   **JIRA Ticket Automation Board**: Below is the live screenshot of the Atlassian Cloud JIRA board (`gamestop_support_tickets`) displaying the support tickets (`KAN-4`, `KAN-5`, `KAN-6`) created dynamically and automatically by the sub-agent:
-    ![Atlassian JIRA Board Support Tickets](./jira_board_screenshot.png)
+    ![Atlassian JIRA Board Support Tickets](./assets/jira_board_screenshot.png)
 
 ---
 
@@ -64,7 +64,7 @@ The agent workspace defines a nested parent-child relationship tree, modeled nat
 
 This sequence diagram illustrates the step-by-step execution timeline of the JIRA-integrated multi-agent pipeline:
 
-![Multi-Agent Execution Sequence Diagram](./sequence_diagram.png)
+![Multi-Agent Execution Sequence Diagram](./assets/sequence_diagram.png)
 
 ---
 
@@ -77,31 +77,25 @@ ge_fileagent/
 ├── gemini_parser.py   # Image audit comparison & validation client
 ├── .env               # Configuration tokens (Vertex AI, GCS, JIRA)
 ├── requirements.txt   # Cloud container dependencies (mcp, Pillow, sse-starlette)
-└── README.md          # Setup and Multi-Agent Architecture documentation
+├── README.md          # Setup and Multi-Agent Architecture documentation
+├── assets/            # High-resolution visual diagram and B2B invoice assets
+└── tests/             # Programmatic local CLI and mock test suites
 ```
 
 ---
 
 ## ⚙️ JIRA MCP Configuration
 
-The JIRA sub-agent (`jira_agent`) utilizes the Model Context Protocol (MCP) to interact with the Atlassian cloud. It supports two runtime transport modes natively:
+The JIRA sub-agent (`jira_agent`) utilizes the Model Context Protocol (MCP) to interact with the Atlassian cloud. It exclusively uses the **SSE Remote Cloud Mode** for both local testing and cloud production, making the system 100% serverless, portable, and independent of local binaries.
 
-### A. Local Stdio Mode (Default / Local Testing)
-Spawns a local subprocess running the Atlassian JIRA MCP server. 
-*   **Binary Path**: Resolved dynamically relative to this package directory: `ge_fileagent/mcp-atlassian` (completely self-contained).
-*   **Standard Environment Variables**:
-    *   `JIRA_URL`: `https://google-team-vwhbosar.atlassian.net` (Atlassian cloud domain).
-    *   `JIRA_USERNAME`: Derived automatically from your `JIRA_EMAIL` setting.
-    *   `JIRA_API_TOKEN`: Your Atlassian Personal API Token.
-    *   `TOOLSETS`: Set to `"all"`.
+### SSE Cloud Mode Setup (Testing & Production)
+To enable automated JIRA ticketing, configure the following variables inside your `.env` file:
 
-### B. SSE Cloud Mode (Production / Cloud Deploy)
-Connects to a remotely hosted Atlassian MCP server using Server-Sent Events (SSE).
-*   **Activation**: Set the `JIRA_MCP_URL` environment variable inside the `.env` file:
-    ```env
-    JIRA_MCP_URL=https://your-mcp-server.endpoints/sse
-    ```
-*   **Authentication**: The agent automatically extracts `JIRA_EMAIL` and `JIRA_API_TOKEN`, converts them to basic base64-encoded authorization headers, and performs secure tokenized handshake exchanges.
+*   **`JIRA_MCP_URL`**: The Server-Sent Events (SSE) public gateway URL of your hosted Atlassian MCP server (for example: `https://your-mcp-server-sse.endpoints/sse`).
+*   **`JIRA_EMAIL`**: Your JIRA login account email (for example: `user@example.com`).
+*   **`JIRA_API_TOKEN`**: Your Atlassian Cloud Personal API Token.
+
+Authentication is handled natively and securely via standard basic Base64 authorization handshake exchanges, with zero local subprocess spawning or path dependencies!
 
 ---
 
@@ -189,7 +183,7 @@ Run the deploy command from the parent directory to bundle your flat ge_fileagen
 export GOOGLE_API_USE_CLIENT_CERTIFICATE=false
 <WORKSPACE_DIR>/gamestop_invoice/venv/bin/adk deploy agent_engine ge_fileagent --project <GCP_PROJECT_ID> --region us-central1 --display_name GeFileAgent --description "Plain ADK expert multi-agent retail invoice auditor with JIRA integration." --requirements_file ge_fileagent/requirements.txt
 ```
-Wait for the provisioning to complete. Copy the returned **Reasoning Engine Resource ID** (for example: `projects/943928157761/locations/us-central1/reasoningEngines/8673214351466823680`).
+Wait for the provisioning to complete. Copy the returned **Reasoning Engine Resource ID** (for example: `projects/943928157761/locations/us-central1/reasoningEngines/2469928077229031424`).
 
 ### Step 2: Register as a Custom Agent in Gemini Enterprise
 1.  Open the **Google Cloud Console** and navigate to **Discovery Engine -> Agent Search**.

@@ -6,3 +6,4 @@ pydantic-settings
 sse-starlette
 google-cloud-storage
 Pillow
+atlassian-python-api

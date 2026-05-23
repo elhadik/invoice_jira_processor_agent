@@ -6,99 +6,41 @@ from google.adk.agents import Agent
 from google.adk.tools import FunctionTool
 from google.adk.tools import load_artifacts
 from google.cloud import storage
-from ge_fileagent.document_parser import parse_document
-from ge_fileagent.gemini_parser import analyze_receipt_with_gemini
+from .document_parser import parse_document
+from .gemini_parser import analyze_receipt_with_gemini
 
 # --- JIRA MCP Core Integration ---
 
 def create_jira_ticket_mcp(summary: str, description: str) -> str:
-    """Creates a JIRA support ticket using the local mcp-atlassian server or SSE transport."""
+    """Creates a JIRA support ticket directly via Atlassian Cloud REST API."""
+    from atlassian import Jira
     email = os.environ.get("JIRA_EMAIL", "elhadik@google.com")
     api_token = os.environ.get("JIRA_API_TOKEN")
     jira_url = "https://google-team-vwhbosar.atlassian.net"
     
     if not api_token:
         return "Error: JIRA_API_TOKEN environment variable is not set."
-
-    mcp_url = os.environ.get("JIRA_MCP_URL")
-    
-    from mcp.client.session import ClientSession
-
-    # CASE A: Connect via SSE
-    if mcp_url:
-        from mcp.client.sse import sse_client
-        credentials = f"{email}:{api_token}"
-        encoded_credentials = base64.b64encode(credentials.encode()).decode()
-        headers = {
-            "Authorization": f"Basic {encoded_credentials}",
-            "Content-Type": "application/json"
-        }
-
-        async def _call_sse():
-            async with sse_client(mcp_url, headers=headers) as (read_stream, write_stream):
-                async with ClientSession(read_stream, write_stream) as session:
-                    await session.initialize()
-                    result = await session.call_tool("jira_create_issue", {
-                        "project_key": "KAN",
-                        "summary": summary,
-                        "description": description,
-                        "issue_type": "Task"
-                    })
-                    return "\n".join([item.text if hasattr(item, 'text') else str(item) for item in result.content])
-        try:
-            try:
-                loop = asyncio.get_running_loop()
-                import concurrent.futures
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    future = executor.submit(asyncio.run, _call_sse())
-                    return future.result()
-            except RuntimeError:
-                return asyncio.run(_call_sse())
-        except Exception as err:
-            return f"Error calling SSE JIRA MCP: {err}"
-
-    # CASE B: Connect via local stdio (Default)
-    else:
-        from mcp.client.stdio import StdioServerParameters, stdio_client
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        binary_path = os.path.join(current_dir, "mcp-atlassian")
-        if not os.path.exists(binary_path):
-            return f"Error: Local mcp-atlassian binary not found at {binary_path}."
-
-        server_params = StdioServerParameters(
-            command=binary_path,
-            args=[],
-            env={
-                "JIRA_URL": jira_url,
-                "JIRA_USERNAME": email,
-                "JIRA_API_TOKEN": api_token,
-                "TOOLSETS": "all",
-                "PATH": os.environ.get("PATH", "")
+        
+    try:
+        jira = Jira(
+            url=jira_url,
+            username=email,
+            password=api_token,
+            cloud=True
+        )
+        issue = jira.issue_create(
+            fields={
+                'project': {'key': 'KAN'},
+                'summary': summary,
+                'description': description,
+                'issuetype': {'name': 'Task'}
             }
         )
+        return f"Success! Created JIRA issue: {issue.get('key')}"
+    except Exception as e:
+        return f"Error creating JIRA issue directly: {e}"
 
-        async def _call_stdio():
-            async with stdio_client(server_params) as (read_stream, write_stream):
-                async with ClientSession(read_stream, write_stream) as session:
-                    await session.initialize()
-                    result = await session.call_tool("jira_create_issue", {
-                        "project_key": "KAN",
-                        "summary": summary,
-                        "description": description,
-                        "issue_type": "Task"
-                    })
-                    return "\n".join([item.text if hasattr(item, 'text') else str(item) for item in result.content])
-        try:
-            try:
-                loop = asyncio.get_running_loop()
-                import concurrent.futures
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    future = executor.submit(asyncio.run, _call_stdio())
-                    return future.result()
-            except RuntimeError:
-                return asyncio.run(_call_stdio())
-        except Exception as err:
-            return f"Error calling local STDIO JIRA MCP: {err}"
+
 
 def create_jira_ticket_tool(summary: str, description: str) -> str:
     """Creates a support ticket in JIRA via Atlassian MCP integration.
@@ -190,12 +132,25 @@ def run_adk_orchestrator(filename: str, mime_type: str, data_bytes: bytes = None
     routing_json = route_document_tool(filename=filename, mime_type=mime_type, score=score, data_bytes=data_bytes, file_path=file_path)
     routing_data = json.loads(routing_json)
     
-    # 4. Synthesize final payload
+    # 4. Trigger JIRA Ticketing if score is below 3 (discrepancy found!)
+    jira_status = "Skipped (Perfect Score)"
+    if score < 3:
+        print(f"[Orchestrator] Low audit score ({score}). Triggering JIRA ticket creation...")
+        discrepancy_details = validation_data.get("criteria_met", "Validation discrepancies found.")
+        jira_status = create_jira_ticket_tool(
+            summary=f"AUDIT FAIL: Discrepancy in store auditor {filename}",
+            description=f"Automated store auditor detected discrepancies.\n\nAudit details:\n{discrepancy_details}"
+        )
+        print(f"[Orchestrator] JIRA Ticket: {jira_status}")
+        
+    # 5. Synthesize final payload
     payload = extracted_data
     payload["gemini_analysis"] = validation_data
     payload["gcs_routing"] = routing_data
+    payload["jira_ticketing"] = jira_status
     
     return payload
+
 
 # --- ADK Tool for File Artifact Processing ---
 

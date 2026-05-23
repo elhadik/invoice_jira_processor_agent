@@ -41,8 +41,9 @@ async def main():
     # Create the test session
     session = await runner.session_service.create_session(app_name=runner.app_name, user_id="test_user")
     
-    # Load the sample receipt image file
-    sample_filepath = "/usr/local/google/home/elhadik/gamestop_invoice/sample_receipt.png"
+    # Load the self-contained sample B2B invoice image file
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    sample_filepath = os.path.join(current_dir, "../assets/sample_invoice.png")
     print(f"[Test CLI] Loading local sample receipt file: {sample_filepath}")
     with open(sample_filepath, "rb") as f:
         img_bytes = f.read()
@@ -78,11 +79,10 @@ async def main():
     print("[Test CLI] Triggering route_document_tool programmatically with validation failure score 2...")
     
     discrepancy_criteria = "Auditor Alert: Store total total mismatch. Visual receipt displays Total $47.08, but Document AI extracted $4.29."
-    routing_res_json = await route_document_tool(
+    routing_res_json = route_document_tool(
         filename="sample_receipt.png",
         mime_type="image/png",
         score=2,
-        criteria=discrepancy_criteria,
         data_bytes=img_bytes
     )
     

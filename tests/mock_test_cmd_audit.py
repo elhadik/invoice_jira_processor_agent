@@ -1,5 +1,12 @@
 import os
 print("MOCK SCRIPT INITIALIZING")
+from dotenv import load_dotenv
+
+# Load env file (located in parent folder)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+env_path = os.path.join(current_dir, "../.env")
+load_dotenv(dotenv_path=env_path)
+
 os.environ["GOOGLE_API_USE_CLIENT_CERTIFICATE"] = "false"
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "true"
 os.environ["GOOGLE_CLOUD_PROJECT"] = "shade-sandbox"
@@ -63,7 +70,7 @@ async def main():
         app_name=runner.app_name,
         user_id="test_user",
         session_id=session.id,
-        filename="sample_receipt.png",
+        filename="sample_invoice.png",
         artifact=part
     )
 

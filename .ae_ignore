@@ -1,0 +1,15 @@
+# Exclude credentials from cloud packaging
+.env
+
+# Exclude locked local databases and caches to prevent staging cleanup crashes
+.adk
+.adk/
+.git
+.git/
+
+# Exclude test frameworks and assets
+tests
+tests/
+assets
+assets/
+mcp_atlassian_wrapper.py

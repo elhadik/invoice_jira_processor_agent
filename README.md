@@ -58,6 +58,10 @@ The agent workspace defines a nested parent-child relationship tree, modeled nat
 *   **JIRA Ticket Automation Board**: Below is the live screenshot of the Atlassian Cloud JIRA board (`gamestop_support_tickets`) displaying the support tickets (`KAN-4`, `KAN-5`, `KAN-6`) created dynamically and automatically by the sub-agent:
     ![Atlassian JIRA Board Support Tickets](./assets/jira_board_screenshot.png)
 
+### 💬 Live Gemini Enterprise Execution Example
+Below is the live screenshot of the multi-agent store auditor running natively inside your **Gemini Enterprise** chat assistant interface, executing the full extraction, visual audit, and JIRA support ticketing pipeline in real-time:
+![Gemini Enterprise Chat Execution](./assets/ge_execution_screenshot.png)
+
 ---
 
 ## ⏱️ Multi-Agent Execution Sequence Diagram

@@ -162,6 +162,29 @@ JIRA_API_TOKEN=your-copied-atlassian-api-token
 
 ---
 
+## ⚙️ JIRA Model Context Protocol (MCP) Integration
+
+The JIRA sub-agent (`jira_agent`) is designed to support the **Model Context Protocol (MCP)** standard, allowing it to interact with Atlassian Cloud via a hosted MCP JIRA server. 
+
+This repository supports two execution architectures:
+
+### 1. Active Direct Mode (Native Python Client)
+By default, for optimal speed, thread-safety, and in-memory performance inside serverless cloud containers (Vertex AI Agent Engines), the agent uses the native **`atlassian-python-api`** library.
+*   **MIME / Auth**: Basic OAuth2 base64 handshakes.
+*   **Config variables**: Requires `JIRA_EMAIL` and `JIRA_API_TOKEN` in your `.env` file.
+*   **Execution**: Programmatic direct REST API calls.
+
+### 2. MCP Server Mode (SSE Gateway)
+If you choose to delegate JIRA actions to a dedicated, external JIRA MCP Server, the sub-agent communicates via the **Server-Sent Events (SSE) protocol**. This keeps the agent 100% serverless and independent of local node or python path binaries:
+
+*   **`JIRA_MCP_URL`**: The public Server-Sent Events (SSE) endpoint gateway URI of your hosted Atlassian JIRA MCP server (for example: `https://your-mcp-gateway-sse.endpoints/sse`).
+*   **`JIRA_EMAIL`**: Your JIRA login account email (for example: `user@example.com`).
+*   **`JIRA_API_TOKEN`**: Your Atlassian Cloud Personal API Token (PAT).
+
+When `JIRA_MCP_URL` is configured, the agent automatically routes all ticketing queries via HTTP SSE protocol to the external MCP server, which securely executes the requested tools on your Atlassian board.
+
+---
+
 ## 🔑 Obtaining Authorization Resource (Sequential slots combined-auth-vX)
 
 Gemini Enterprise requires agents deployed via Agent Engine to have a unique **Authorization Resource** to securely communicate with user-facing interfaces.

@@ -1,6 +1,6 @@
-# Multi-Agent Retail Invoice Auditor (Plain ADK)
+# Standalone A2UI Retail Store Invoice Auditor Agent
 
-This folder contains a flat, pure **Google Agent Development Kit (ADK)** agent workspace that implements a sequential multi-agent pipeline designed to automate retail store invoice auditing, data validation, cloud archival routing, and automated helpdesk ticket resolution.
+This folder contains a flat, modular **Google Agent Development Kit (ADK)** agent workspace that implements a robust **A2A (Agent-to-Agent)** protocol and **A2UI (Agent-driven User Interface)** extension designed to automate retail store receipt auditing, data validation, cloud archival GCS routing, helpdesk JIRA ticketing, and interactive visual breakdown charting rendered natively in **Google Cloud Gemini Enterprise**.
 
 ---
 
@@ -13,99 +13,104 @@ The system provides an automated, end-to-end store invoice auditing pipeline wit
 *   **GCS Cloud Archival & Routing**: Automatically evaluates audit confidence.
     *   **Score 3 (Perfect Match)**: Archives the document directly in the GCS Processed bucket.
     *   **Score < 3 (Discrepancy/Anomaly)**: Routes the document to the GCS Human Review bucket for manual intervention.
-*   **Dynamic JIRA Ticketing Sub-Agent**: When a discrepancy is flagged (Score < 3), the router delegates to a specialized JIRA MCP sub-agent to automatically log a support ticket with a structured finding report (including discrepancy summaries and GCS review links) on your Atlassian Cloud support board.
-
-## 📷 Sample Enterprise Invoice Example
-
-Below is the high-resolution, premium B2B enterprise invoice asset used for testing extraction and visual audit validation inside the pipeline:
-
-![Sample Enterprise Invoice](./assets/sample_invoice.png)
+*   **Dynamic JIRA Ticketing Coordinator**: When a discrepancy is flagged (Score < 3), the router delegates to automatically log a support ticket with a structured finding report (including discrepancy summaries and GCS review links) on your Atlassian Cloud support board.
+*   **Interactive Visual A2UI Breakdown Charting**: Generates a beautiful declarative Vega-Lite pie chart representing the visual expense breakdown of the final total (mapping each line item and the tax to a slice of the pie) rendered natively inside your Gemini Enterprise chat window.
 
 ---
 
-## 🏗️ Multi-Agent Architecture
+## 📷 Sample B2B Test Invoice Example
 
-The agent workspace defines a nested parent-child relationship tree, modeled natively using ADK's `sub_agents` property.
+Below is the high-resolution B2B enterprise invoice image asset used for validating extraction inside the pipeline:
 
-![Agent Tree Architecture Diagram](./assets/architecture_diagram.png)
-
-### 1. `orchestrator_agent` (Root Coordinator)
-*   **Model**: `gemini-2.5-flash`
-*   **Role**: The primary store auditor. Coordinates the specialists sequentially and aggregates the final markdown report.
-*   **Tools**: `load_artifacts`, `analyze_uploaded_invoice`
-*   **Sub-Agents**: `data_extractor_agent`, `validator_agent`, `scoring_routing_agent`
-
-### 2. `data_extractor_agent` (Specialist Extractor)
-*   **Model**: `gemini-2.5-flash`
-*   **Role**: Expert retail document parser. Identifies Merchant Name, Invoice Date, Tax, Total, and line-item entities.
-*   **Tools**: `extract_data_tool` (drives `document_parser.py`)
-
-### 3. `validator_agent` (Specialist Auditor)
-*   **Model**: `gemini-2.5-flash`
-*   **Role**: Validation auditor. Performs image-to-text comparisons to verify the accuracy of extracted fields directly against what is visually readable in the receipt.
-*   **Tools**: `validate_data_tool` (drives `gemini_parser.py`)
-
-### 4. `scoring_routing_agent` (Specialist Routing & Ticket Coordinator)
-*   **Model**: `gemini-2.5-flash`
-*   **Role**: Archives documents depending on validation score. If the score is below 3 (fail/discrepancy), it delegates the task to `jira_agent` to raise a support issue.
-*   **Tools**: `route_document_tool` (GCS routing client)
-*   **Sub-Agents**: `jira_agent`
-
-### 5. `jira_agent` (Integration Support Agent)
-*   **Model**: `gemini-2.5-flash`
-*   **Role**: Specialist JIRA assistant. Connects via our thread-safe async ThreadPool MCP execution bridge to raise support tickets on the Atlassian cloud board.
-*   **Tools**: `create_jira_ticket_tool` (Atlassian MCP integration)
-*   **JIRA Ticket Automation Board**: Below is the live screenshot of the Atlassian Cloud JIRA board (`gamestop_support_tickets`) displaying the support tickets (`KAN-4`, `KAN-5`, `KAN-6`) created dynamically and automatically by the sub-agent:
-    ![Atlassian JIRA Board Support Tickets](./assets/jira_board_screenshot.png)
-
-### 💬 Live Gemini Enterprise Execution Example
-Below is the live screenshot of the multi-agent store auditor running natively inside your **Gemini Enterprise** chat assistant interface, executing the full extraction, visual audit, and JIRA support ticketing pipeline in real-time:
-![Gemini Enterprise Chat Execution](./assets/ge_execution_screenshot.png)
+![Sample Invoice](assets/sample_invoice.png)
 
 ---
 
-## ⏱️ Multi-Agent Execution Sequence Diagram
+## 🏗️ Architecture & Flow
 
-This sequence diagram illustrates the step-by-step execution timeline of the JIRA-integrated multi-agent pipeline:
+This project demonstrates the **Agent-to-Agent (A2A)** protocol and **A2UI** extension in Google Cloud Gemini Enterprise.
 
-![Multi-Agent Execution Sequence Diagram](./assets/sequence_diagram.png)
+### Architecture & Tools Flowchart
+
+Below is the modular tools-and-agent execution pipeline flowchart:
+
+![Architecture Flowchart](assets/architecture_flowchart.png)
+
+Gemini Enterprise acts as the frontend orchestrator. When a user interacts with an agent that requires custom UI or specific tools, the flow is as follows:
+
+- **Gemini Enterprise (GE)**: The main user interface and orchestrator.
+- **Agent Engine (Reasoning Engine)**: Hosts the custom Python agent code.
+- **A2UI Extension**: Defines how the agent can send structured UI data (like cards and charts) back to GE to be rendered.
+
+### Why A2A and A2UI?
+
+We use the **A2A (Agent-to-Agent)** pattern and **A2UI** extension for several key reasons:
+
+1. **Decoupling**: Gemini Enterprise doesn't need to know the specific logic or data structure of every specialized agent. A2A provides a standard communication protocol.
+2. **Rich Interactive Experience**: Standard chat is limited to text. A2UI allows agents to return rich, structured components (like contact cards and interactive charts) that render natively in the Gemini Enterprise chat interface.
+3. **Dynamic Extensibility**: Specialized agents can provide specific visualizations tailored to the user's request (e.g., a VegaChart for pricing, a profile card for contacts) without requiring updates to the main Gemini Enterprise application UI.
+4. **Security First**: Instead of sending executable HTML or JavaScript (which carries security risks across trust boundaries), A2UI uses a **declarative JSON-based protocol**. The client application maintains a catalog of trusted components, reducing the risk of UI injection.
+5. **LLM-Friendly**: The UI is represented as a flat list of components with ID references, making it easy for LLMs to generate and update incrementally.
+
+### Sequence Diagram
+
+Here is the flow of a request from the user to the agent and back:
+
+![Sequence Diagram](assets/sequence_diagram.png)
+
+**Reflection on the Diagram:**
+- **A2A (Agent-to-Agent)**: The arrows between *Gemini Enterprise* and *Custom Agent* represent the A2A protocol. It passes the user's intent and context in a standard request, and receives the answer (both text and UI) in a standard response.
+- **A2UI (Agent UI)**: The step where the *Custom Agent* wraps the data in `a2ui-json` and returns it, and *Gemini Enterprise* renders the VegaChart, illustrates the A2UI extension. The agent dictates the UI structure, and the platform handles the rendering.
+
 
 ---
 
-## 📁 Flat Package Structure
+## 📷 Live Gemini Enterprise Execution Example
+
+Below is the custom A2UI store auditor running natively inside your **Gemini Enterprise** chat assistant interface, executing the full extraction, GCS review routing, JIRA ticketing, and rich visual A2UI pie chart rendering in real-time:
+
+![Gemini Enterprise Chat Execution](assets/ge_execution_screenshot.png)
+
+### Atlassian Cloud JIRA Automated Ticketing
+
+If the Gemini Visual Auditor flags any discrepancies or anomalies (Confidence Score < 3), the integrated JIRA client programmatically logs a high-priority support task inside your Atlassian Cloud JIRA board:
+
+*   **Direct Native Integration**: Driven using the lightweight `atlassian-python-api` library, completely bypassing the need for complex local or remote MCP servers.
+*   **Secure Credentials**: Uses basic authentication via `JIRA_EMAIL` and `JIRA_API_TOKEN` loaded dynamically from your `.env` file (and fully containerized in Vertex AI `env_vars`).
+*   **Rich Finding Reports**: Automatically populates the JIRA task description with a detailed discrepancy summary, Cashier ID, transaction totals, cashier metadata, and the GCS cloud review bucket archival URI for immediate human intervention.
+
+![Atlassian JIRA Board Support Tickets](assets/jira_board_screenshot.png)
+
+---
+
+## 📁 Flat Staging Reorganized Package Structure
+
+The project utilizes a **Hybrid Layout** that seamlessly supports local developer CLI emulators (`adk web`, `adk run` which seek flat entry points) and serverless Google Cloud Vertex AI Reasoning Engine Builders (which require subdirectory python packages in `extra_packages` configuration parameters):
 
 ```text
-ge_fileagent/
-├── agent.py           # Main definitions (Orchestrator + Specialists + sub_agents)
-├── document_parser.py # OCR & Entity extraction client
-├── gemini_parser.py   # Image audit comparison & validation client
-├── .env               # Configuration tokens (Vertex AI, GCS, JIRA)
-├── requirements.txt   # Cloud container dependencies (mcp, Pillow, sse-starlette)
-├── README.md          # Setup and Multi-Agent Architecture documentation
-├── assets/            # High-resolution visual diagram and B2B invoice assets
-└── tests/             # Programmatic local CLI and mock test suites
+GE_fileagent_a2ui/
+├── agent.py             # Root wrapper entry point (exposing root_agent)
+├── executor.py          # Custom StoreAuditorExecutor executing A2A protocol
+├── tools.py             # Custom tools (including audit_invoice_tool & analyze_uploaded_invoice_tool)
+├── document_parser.py   # Document AI parser client
+├── gemini_parser.py     # Gemini visual auditor client
+├── adk_app.py           # adk web entry point
+├── deploy.py            # Unified deploy script
+├── register.py          # Dynamic registration helper script
+├── pyproject.toml       # Poetry/UV workspace configuration
+├── requirements.txt     # Pinned container dependencies
+├── .env                 # Configuration tokens (Vertex AI, GCS, JIRA)
+├── README.md            # Unified Deployment and Architecture Guide
+├── assets/              # High-resolution visual diagram and B2B invoice assets
+├── examples/            # Catalog A2UI JSON examples
+└── tests/               # Integration test suite
 ```
-
----
-
-## ⚙️ JIRA MCP Configuration
-
-The JIRA sub-agent (`jira_agent`) utilizes the Model Context Protocol (MCP) to interact with the Atlassian cloud. It exclusively uses the **SSE Remote Cloud Mode** for both local testing and cloud production, making the system 100% serverless, portable, and independent of local binaries.
-
-### SSE Cloud Mode Setup (Testing & Production)
-To enable automated JIRA ticketing, configure the following variables inside your `.env` file:
-
-*   **`JIRA_MCP_URL`**: The Server-Sent Events (SSE) public gateway URL of your hosted Atlassian MCP server (for example: `https://your-mcp-server-sse.endpoints/sse`).
-*   **`JIRA_EMAIL`**: Your JIRA login account email (for example: `user@example.com`).
-*   **`JIRA_API_TOKEN`**: Your Atlassian Cloud Personal API Token.
-
-Authentication is handled natively and securely via standard basic Base64 authorization handshake exchanges, with zero local subprocess spawning or path dependencies!
 
 ---
 
 ## ⚙️ Local .env Configuration
 
-To run the auditor locally, create a `.env` file inside `ge_fileagent/` and configure these variables:
+Create a `.env` file in the root directory and fill in the following variables:
 
 ```env
 # 1. Bypass setting for corporate OpenSSL mTLS checks (Mandatory!)
@@ -113,9 +118,10 @@ GOOGLE_API_USE_CLIENT_CERTIFICATE=false
 
 # 2. Vertex AI Cloud settings
 GOOGLE_GENAI_USE_VERTEXAI=true
-GOOGLE_CLOUD_PROJECT=<GCP_PROJECT_ID>
-GOOGLE_CLOUD_LOCATION=us-central1
-GEMINI_MODEL_NAME=gemini-2.5-flash
+PROJECT_ID=<GCP_PROJECT_ID>
+LOCATION=us-central1
+STORAGE_BUCKET=gs://<YOUR_STAGING_BUCKET_NAME>
+GEMINI_ENTERPRISE_APP_ID=<GEMINI_ENTERPRISE_APP_ID>
 
 # 3. Google Cloud Storage (GCS) Archival Buckets
 NESS_PROCESSED_DOCS_BUCKET=gamestop-processed-docs-<GCP_PROJECT_ID>
@@ -124,101 +130,159 @@ NESS_HUMAN_REVIEW_BUCKET=gamestop-review-docs-<GCP_PROJECT_ID>
 # 4. JIRA Integration credentials
 JIRA_EMAIL=<USER_EMAIL>
 JIRA_API_TOKEN=<YOUR_ATLASSIAN_PAT_TOKEN>
+
+# 5. Gemini Enterprise Authorization Slot
+AGENT_AUTHORIZATION=projects/<YOUR_PROJECT_NUMBER>/locations/global/authorizations/combined-auth-v28
 ```
 
 ---
 
-## ☁️ Google Cloud Authentication
+## ⚙️ JIRA Board Setup Guide
 
-Before running the local server, your terminal session must be authenticated with Google Cloud to access Vertex AI and GCS bucket resources:
+To enable automated support ticket logging on receipt discrepancies, follow these steps to configure the native JIRA cloud integration:
+
+### Step 1: Generate an Atlassian Personal API Token
+1.  Go to your Atlassian Account Security profile at: **[id.atlassian.com/manage-profile/security/api-tokens](https://id.atlassian.com/manage-profile/security/api-tokens)**.
+2.  Click **Create API token**.
+3.  Enter a descriptive label (for example: `store-auditor-token`).
+4.  Click **Create**, and copy the generated token string immediately.
+
+### Step 2: Retrieve JIRA Project Board Details
+1.  Log into your Atlassian JIRA Cloud instance (for example: `https://your-team.atlassian.net`).
+2.  Locate your active Kanban or Scrum board, and copy the **Project Key** (for example, the default key **`KAN`**).
+3.  Ensure that issue creation is enabled for the `Task` type inside that project.
+
+### Step 3: Configure the `.env` File
+Open `/usr/local/google/home/elhadik/GE_fileagent_a2ui/.env` and configure these two basic auth variables:
+```env
+JIRA_EMAIL=your-login-email@example.com
+JIRA_API_TOKEN=your-copied-atlassian-api-token
+```
+*(Authenticating via this secure API token is handled natively in the cloud Reasoning Engine container using the `atlassian-python-api` library, with no external server required!)*
+
+---
+
+## 🔑 Obtaining Authorization Resource (Sequential slots combined-auth-vX)
+
+Gemini Enterprise requires agents deployed via Agent Engine to have a unique **Authorization Resource** to securely communicate with user-facing interfaces.
+
+If the cloud platform locks a soft-deleted authorization slot during redeployments, register the next sequential ID (`combined-auth-v28`, `combined-auth-v29`, etc.) to instantly bypass the cache:
+
+### Step 1: Create an OAuth 2.0 Client ID
+1. Go to the **Google Cloud Console**.
+2. Navigate to **APIs & Services** > **Credentials**.
+3. Click **Create Credentials** > **OAuth client ID**.
+4. Select **Web application** as the Application type.
+5. Add the following **Authorized redirect URIs**:
+   - `https://vertexaisearch.cloud.google.com/oauth-redirect`
+   - `https://vertexaisearch.cloud.google.com/static/oauth/oauth.html`
+6. Click **Create** and copy the `client_id` and `client_secret`.
+
+### Step 2: Create the Authorization Resource
+Run this `curl` command in your terminal to register the credentials (replace `<AUTH_ID>` with a clean sequential name like `combined-auth-v28`):
 
 ```bash
-# 1. Authenticate with your Google Cloud user account
-gcloud auth login
-
-# 2. Authenticate Application Default Credentials (ADC)
-# (This is mandatory for the python google-genai SDK to run locally!)
-gcloud auth application-default login
-
-# 3. Set your default cloud project
-gcloud config set project <GCP_PROJECT_ID>
+curl -X POST \
+  -H "Authorization: Bearer $(gcloud auth application-default print-access-token)" \
+  -H "Content-Type: application/json" \
+  -H "X-Goog-User-Project: <GCP_PROJECT_ID>" \
+  "https://global-discoveryengine.googleapis.com/v1alpha/projects/<GCP_PROJECT_ID>/locations/global/authorizations?authorizationId=<AUTH_ID>" \
+  -d '{
+    "name": "projects/<GCP_PROJECT_ID>/locations/global/authorizations/<AUTH_ID>",
+    "serverSideOauth2": {
+      "clientId": "<YOUR_CLIENT_ID>",
+      "clientSecret": "<YOUR_CLIENT_SECRET>",
+      "authorizationUri": "https://accounts.google.com/o/oauth2/v2/auth?client_id=<YOUR_CLIENT_ID>&redirect_uri=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fstatic%2Foauth%2Foauth.html&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcloud-platform&include_granted_scopes=true&response_type=code&access_type=offline&prompt=consent",
+      "tokenUri": "https://oauth2.googleapis.com/token"
+    }
+  }'
 ```
 
 ---
 
-## 🚀 How to Run Locally
+## 🚀 How to Run & Test Locally
 
-First, make sure you are in this directory:
+### Step 1: Release Port 8000
+If an active `adk web` server process is lingering, force-release port 8000:
 ```bash
-cd ge_fileagent
+fuser -k 8000/tcp || true
 ```
 
-### Step 1: Stage the isolated copy
-To satisfy ADK's strict security traversal checks, create an isolated staging copy in your local `/tmp/` directory:
+### Step 2: Stage Sandbox
+Synchronize the workspace to `/tmp/adk_agents` (to satisfy ADK sandboxed directory traversal checks):
 ```bash
-rm -rf /tmp/adk_agents/ge_fileagent
-mkdir -p /tmp/adk_agents/ge_fileagent
-cp -r ge_fileagent/* /tmp/adk_agents/ge_fileagent/
-cp ge_fileagent/.env /tmp/adk_agents/ge_fileagent/
+rm -rf /tmp/adk_agents/GE_fileagent_a2ui
+mkdir -p /tmp/adk_agents/GE_fileagent_a2ui
+cp -r * /tmp/adk_agents/GE_fileagent_a2ui/
+cp .env /tmp/adk_agents/GE_fileagent_a2ui/
 ```
 
-### Step 2: Start the visual playground
-Start the playground local server by running:
+### Step 3: Test via CLI REPL
+Verify that all sibling import fallbacks and Document AI parsers resolve correctly in-memory:
 ```bash
 export GOOGLE_API_USE_CLIENT_CERTIFICATE=false
 export GOOGLE_GENAI_USE_VERTEXAI=true
 export GOOGLE_CLOUD_PROJECT=<GCP_PROJECT_ID>
 export GOOGLE_CLOUD_LOCATION=us-central1
 
-<WORKSPACE_DIR>/gamestop_invoice/venv/bin/adk web /tmp/adk_agents
+uv run adk run /tmp/adk_agents/GE_fileagent_a2ui "Run the store audit for the invoice at /tmp/adk_agents/GE_fileagent_a2ui/assets/sample_invoice.png"
 ```
 
-Once launched, navigate to **`http://127.0.0.1:8000`**, select **`ge_fileagent`**, upload a receipt, and run your audit prompt!
+### Step 4: Test via Web Playground
+Start the visual playground:
+```bash
+uv run adk web /tmp/adk_agents
+```
+Navigate to **`http://127.0.0.1:8000`**, open `GE_fileagent_a2ui`, drag and drop any receipt, and submit the audit prompt!
 
 ---
 
 ## ☁️ Cloud Deployment & Gemini Enterprise Registration
 
-Follow this operational manual to host your JIRA-integrated flat agent in the cloud and connect it natively to your Gemini Enterprise application:
-
-### Step 1: Deploy to Vertex AI Agent Engine (Reasoning Engine)
-Run the deploy command from the parent directory to bundle your flat ge_fileagent package:
+### Step 1: Deploy to Vertex AI Reasoning Engine
+Deploy your custom Reasoning Engine to the cloud:
 ```bash
-export GOOGLE_API_USE_CLIENT_CERTIFICATE=false
-<WORKSPACE_DIR>/gamestop_invoice/venv/bin/adk deploy agent_engine ge_fileagent --project <GCP_PROJECT_ID> --region us-central1 --display_name GeFileAgent --description "Plain ADK expert multi-agent retail invoice auditor with JIRA integration." --requirements_file ge_fileagent/requirements.txt
+uv run deploy.py
 ```
-Wait for the provisioning to complete. Copy the returned **Reasoning Engine Resource ID** (for example: `projects/943928157761/locations/us-central1/reasoningEngines/2469928077229031424`).
+Copy the returned **Reasoning Engine Resource ID** (for example: `projects/943928157761/locations/us-central1/reasoningEngines/3531370214404915200`).
 
-### Step 2: Register as a Custom Agent in Gemini Enterprise
-1.  Open the **Google Cloud Console** and navigate to **Discovery Engine -> Agent Search**.
-2.  Select your active Enterprise App ID: **`gemini-enterprise-1771779446347`** (Resource ID: `gemini-enterprise-17717794_1771779446347`).
-3.  Click **Add Agent / Register Agent**.
-4.  Choose **Custom Agent** (which communicates natively with plain ADK Reasoning Engine endpoints).
-5.  Under the **Agent Card JSON** configuration, paste this exact specification:
+### Step 2: Register as a Custom Agent on Gemini Enterprise Console
+If registering directly, paste this exact specification under **Discovery Engine Console -> Agent Search -> Register Custom Agent**:
 
 ```json
 {
   "protocolVersion": "0.3.0",
-  "name": "ge_fileagent",
-  "description": "Expert multi-agent retail store auditor.",
-  "url": "https://us-central1-aiplatform.googleapis.com/v1beta1/projects/943928157761/locations/us-central1/reasoningEngines/<YOUR_DEPLOYED_ENGINE_ID>",
+  "name": "store_auditor_a2ui",
+  "description": "An expert A2UI agent that audits store receipts and displays beautiful interactive expense charts.",
+  "url": "https://us-central1-aiplatform.googleapis.com/v1beta1/projects/<GCP_PROJECT_ID>/locations/us-central1/reasoningEngines/<YOUR_DEPLOYED_ENGINE_ID>/a2a",
   "version": "1.0.0",
   "defaultInputModes": ["text/plain"],
   "defaultOutputModes": ["text/plain"],
   "preferredTransport": "HTTP+JSON",
   "capabilities": {
     "streaming": false,
-    "extensions": []
+    "extensions": [
+      {
+        "uri": "https://a2ui.org/a2a-extension/a2ui/v0.8",
+        "description": "Ability to render A2UI",
+        "required": false,
+        "params": {
+          "supportedCatalogIds": [
+            "https://a2ui.org/specification/v0_8/standard_catalog_definition.json"
+          ]
+        }
+      }
+    ]
   },
   "skills": [
     {
-      "id": "ge_fileagent",
-      "name": "Multi-Agent Store Invoice Auditor",
-      "description": "Extracts retail entities, performs image-to-text validation, routes processed documents to GCS, and dynamically raises JIRA support tickets for discrepancies.",
-      "tags": ["invoice", "audit", "jira", "gcs"],
+      "id": "store-invoice-auditor-chart",
+      "name": "Store Invoice Auditor & Expense Chart",
+      "description": "Audits store invoices/receipts, validates entries, GCS routes, JIRA support tickets for discrepancies, and generates a rich interactive expense breakdown pie chart using A2UI.",
+      "tags": ["invoice", "audit", "expense", "chart"],
       "examples": [
-        "Analyze this uploaded invoice",
-        "Run store audit pipeline"
+        "Show my expense chart for this receipt",
+        "Audit this invoice and show the expense breakdown"
       ]
     }
   ]
@@ -226,9 +290,14 @@ Wait for the provisioning to complete. Copy the returned **Reasoning Engine Reso
 ```
 *(Replace `<YOUR_DEPLOYED_ENGINE_ID>` with the actual Reasoning Engine ID copied in Step 1!)*
 
-### Step 3: Test inside your Gemini Enterprise Chat
-1.  Go to your Gemini Enterprise chat assistant console interface.
-2.  Attach/Upload your invoice or receipt image or PDF.
-3.  Type **`Analyze this invoice`** or **`Run audit`**.
-4.  The cloud Reasoning Engine will dynamically download the file in-memory directly from GCS, coordinate the specialists, route archives, raise a JIRA ticket if discrepancies exist, and present the detailed markdown report directly in your chat!
+### Step 3: Test in Chat Interface
+Open the chat assistant in **Gemini Enterprise**, select **`store_auditor_a2ui`**, drag and drop your receipt, and watch the visual pie chart render natively in real-time!
 
+---
+
+## 🔗 References
+
+- **A2UI Core Standard Specification**: [https://a2ui.org/](https://a2ui.org/)
+- **A2UI Open Project Repository**: [https://github.com/google/A2UI](https://github.com/google/A2UI)
+- **Google Cloud Enterprise Manual**: [Register and manage A2A agents](https://docs.cloud.google.com/gemini/enterprise/docs/register-and-manage-an-a2a-agent)
+- **Vega-Lite Grammar Reference**: [https://vega.github.io/schema/vega-lite/v5.json](https://vega.github.io/schema/vega-lite/v5.json)
